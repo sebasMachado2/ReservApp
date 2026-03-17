@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import { DentistDashboard } from './views/DentistView';
 import { ClientDashboard } from './views/ClientView';
 import { PatientHistory } from './views/PatientHistory';
+import { TreatmentManager } from './views/TreatmentManager';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { LoginView } from './views/LoginView';
 
@@ -38,6 +39,7 @@ function AppContent() {
         <>
           <DentistDashboard user={user} />
           <PatientHistory user={user} />
+          <TreatmentManager user={user} />
         </>
       ) : <ClientDashboard user={user} />}
     </Layout>

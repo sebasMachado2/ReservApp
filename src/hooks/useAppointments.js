@@ -59,7 +59,7 @@ export const useAppointments = (user) => {
         client_name: newApp.client_name,
         client_email: user.email,
         treatment: newApp.treatment,
-        duration_minutes: newApp.duration_minutes,
+        duration_minutes: newApp.duration_minutes || 60,
         date: newApp.date,
         time: newApp.time,
         status: 'pending'
