@@ -22,7 +22,7 @@ export const DentistDashboard = ({ user }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {pending.length === 0 ? (
             <div className="card" style={{ textAlign: 'center', padding: '3rem', borderStyle: 'dashed' }}>
-              <p style={{ color: 'var(--text-muted)' }}>No hay solicitudes nuevas ✨</p>
+              <p style={{ color: 'var(--text-muted)' }}>No hay solicitudes nuevas</p>
             </div>
           ) : (
             pending.map(app => (
@@ -31,8 +31,8 @@ export const DentistDashboard = ({ user }) => {
                   <div>
                     <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{app.client_name}</h4>
                     <p style={{ color: 'var(--primary)', fontWeight: '600', fontSize: '0.9rem' }}>{app.treatment}</p>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>
-                      📅 {app.date} | ⏰ {app.time}
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <Clock size={14} /> {app.time} | <span style={{ opacity: 0.5 }}>•</span> {app.date}
                     </p>
                   </div>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>

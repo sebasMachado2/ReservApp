@@ -82,5 +82,29 @@ export const useAppointments = (user) => {
     }
   };
 
-  return { appointments, loading, addAppointment, updateStatus };
+  const updateNotes = async (id, notes) => {
+    const { error } = await supabase
+      .from('appointments')
+      .update({ notes })
+      .eq('id', id);
+
+    if (!error) {
+      fetchAppointments();
+    }
+  };
+
+  const rescheduleAppointment = async (id, date, time) => {
+    const { error } = await supabase
+      .from('appointments')
+      .update({ date, time })
+      .eq('id', id);
+
+    if (!error) {
+      fetchAppointments();
+      return { success: true };
+    }
+    return { success: false, message: error.message };
+  };
+
+  return { appointments, loading, addAppointment, updateStatus, updateNotes, rescheduleAppointment };
 };
