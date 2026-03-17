@@ -1,14 +1,16 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, Hash } from 'lucide-react';
 
 export const CalendarGrid = ({ 
   appointments, 
   onSlotClick, 
+  onAppClick, // Nueva prop para click en citas
   selectedDate, 
   selectedTime,
   currentWeekStart,
   onPrevWeek,
-  onNextWeek
+  onNextWeek,
+  isDentist = false // Nueva prop para modo dentista
 }) => {
   const days = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
   const startHour = 8;
@@ -58,11 +60,11 @@ export const CalendarGrid = ({
       </div>
 
       {/* Grid del Cuerpo */}
-      <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(5, 1fr)', height: '500px', overflowY: 'auto', position: 'relative' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '80px repeat(5, 1fr)', height: '520px', overflowY: 'auto', position: 'relative' }}>
         {/* Eje de Horas */}
-        <div style={{ gridColumn: '1' }}>
+        <div style={{ gridColumn: '1', position: 'sticky', left: 0, background: 'white', zIndex: 5 }}>
           {Array.from({ length: endHour - startHour + 1 }).map((_, i) => (
-            <div key={i} style={{ height: '60px', padding: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', borderBottom: '1px dashed #e2e8f0', textAlign: 'right' }}>
+            <div key={i} style={{ height: '60px', padding: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', borderBottom: '1px dashed #f1f5f9', textAlign: 'right' }}>
               {String(startHour + i).padStart(2, '0')}:00
             </div>
           ))}
@@ -70,7 +72,7 @@ export const CalendarGrid = ({
 
         {/* Columnas de Días */}
         {weekDates.map((date, dayIdx) => (
-          <div key={date} style={{ position: 'relative', borderLeft: '1px solid #e2e8f0', background: 'white' }}>
+          <div key={date} style={{ position: 'relative', borderLeft: '1px solid #f1f5f9', background: 'white' }}>
             {/* Citas como bloques */}
             {appointments
               .filter(app => app.date === date && app.status !== 'cancelled')
@@ -80,28 +82,43 @@ export const CalendarGrid = ({
                 const isConfirmed = app.status === 'confirmed';
                 
                 return (
-                  <div key={app.id} style={{
-                    position: 'absolute',
-                    top: `${startPos * 15}px`,
-                    left: '2px',
-                    right: '2px',
-                    height: `${height - 1}px`,
-                    background: isConfirmed ? '#dcfce7' : '#dbeafe',
-                    borderLeft: `4px solid ${isConfirmed ? '#22c55e' : '#3b82f6'}`,
-                    borderRadius: '4px',
-                    padding: '6px',
-                    fontSize: '0.75rem',
-                    overflow: 'hidden',
-                    zIndex: 10,
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center'
-                  }}>
+                  <div 
+                    key={app.id} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAppClick?.(app);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: `${startPos * 15}px`,
+                      left: '2px',
+                      right: '2px',
+                      height: `${height - 1}px`,
+                      background: isConfirmed ? '#dcfce7' : '#dbeafe',
+                      borderLeft: `3px solid ${isConfirmed ? '#22c55e' : '#3b82f6'}`,
+                      borderRadius: '4px',
+                      padding: '4px 6px',
+                      fontSize: '0.75rem',
+                      overflow: 'hidden',
+                      zIndex: 10,
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      cursor: onAppClick ? 'pointer' : 'default',
+                      transition: 'transform 0.1s'
+                    }}
+                    onMouseOver={(e) => onAppClick && (e.currentTarget.style.transform = 'scale(1.02)')}
+                    onMouseOut={(e) => onAppClick && (e.currentTarget.style.transform = 'scale(1)')}
+                  >
                     <div style={{ fontWeight: '800', color: isConfirmed ? '#166534' : '#1e40af', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                      {app.treatment}
+                      {isDentist ? app.client_name : app.treatment}
                     </div>
-                    <div style={{ fontSize: '0.65rem', color: isConfirmed ? '#15803d' : '#2563eb', fontWeight: '600' }}>
+                    {isDentist && (
+                        <div style={{ fontSize: '0.65rem', color: isConfirmed ? '#15803d' : '#2563eb', fontWeight: '500', opacity: 0.9 }}>
+                            {app.treatment}
+                        </div>
+                    )}
+                    <div style={{ fontSize: '0.6rem', color: isConfirmed ? '#15803d' : '#2563eb', fontWeight: '700', marginTop: 'auto' }}>
                       {app.time} ({app.duration_minutes}m)
                     </div>
                   </div>
@@ -119,15 +136,15 @@ export const CalendarGrid = ({
               return (
                 <div 
                   key={slotIdx}
-                  onClick={() => onSlotClick(date, time)}
+                  onClick={() => onSlotClick?.(date, time)}
                   style={{
                     height: '15px',
                     borderBottom: slotIdx % 4 === 3 ? '1px solid #f1f5f9' : 'none',
-                    cursor: 'pointer',
+                    cursor: onSlotClick ? 'pointer' : 'default',
                     background: isSelected ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
                   }}
-                  onMouseOver={(e) => !isSelected && (e.target.style.background = '#f8fafc')}
-                  onMouseOut={(e) => !isSelected && (e.target.style.background = 'transparent')}
+                  onMouseOver={(e) => onSlotClick && !isSelected && (e.target.style.background = '#f8fafc')}
+                  onMouseOut={(e) => onSlotClick && !isSelected && (e.target.style.background = 'transparent')}
                 />
               );
             })}

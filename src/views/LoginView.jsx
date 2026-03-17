@@ -15,18 +15,18 @@ export const LoginView = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    
+
     try {
       if (isLogin) {
         const { error } = await login(email, password);
         if (error) throw error;
       } else {
         // 1. Registro en Auth
-        const { data, error: signUpError } = await signUp(email, password, { 
+        const { data, error: signUpError } = await signUp(email, password, {
           full_name: fullName,
-          role: 'client' 
+          role: 'client'
         });
-        
+
         if (signUpError) throw signUpError;
 
         // 2. Insertar en tabla profiles si el usuario se creó
@@ -39,7 +39,7 @@ export const LoginView = () => {
               birth_date: birthDate,
               email: email
             }]);
-          
+
           if (profileError) throw profileError;
         }
 
@@ -52,21 +52,21 @@ export const LoginView = () => {
   };
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      display: 'flex', 
-      alignItems: 'center', 
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
       padding: '1rem'
     }}>
       <div className="card glass" style={{ width: '100%', maxWidth: '450px', padding: '3rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-          <div style={{ 
-            width: '60px', 
-            height: '60px', 
-            background: 'var(--primary)', 
-            borderRadius: '1rem', 
+          <div style={{
+            width: '60px',
+            height: '60px',
+            background: 'var(--primary)',
+            borderRadius: '1rem',
             margin: '0 auto 1.5rem',
             display: 'flex',
             alignItems: 'center',
@@ -88,7 +88,7 @@ export const LoginView = () => {
             <>
               <div style={{ position: 'relative' }}>
                 <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                <input 
+                <input
                   required
                   placeholder="Nombre Completo"
                   style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid #ddd' }}
@@ -97,7 +97,7 @@ export const LoginView = () => {
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
-                <input 
+                <input
                   required
                   type="date"
                   placeholder="Fecha de Nacimiento"
@@ -110,7 +110,7 @@ export const LoginView = () => {
           )}
           <div style={{ position: 'relative' }}>
             <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input 
+            <input
               required
               type="email"
               placeholder="Correo electrónico"
@@ -122,7 +122,7 @@ export const LoginView = () => {
 
           <div style={{ position: 'relative' }}>
             <Lock size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input 
+            <input
               required
               type="password"
               placeholder="Contraseña"
@@ -145,20 +145,12 @@ export const LoginView = () => {
         </form>
 
         <div style={{ marginTop: '2rem', textAlign: 'center' }}>
-          <button 
+          <button
             onClick={() => setIsLogin(!isLogin)}
             style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: '600', cursor: 'pointer' }}
           >
             {isLogin ? '¿No tienes cuenta? Regístrate' : '¿Ya tienes cuenta? Entra aquí'}
           </button>
-        </div>
-
-        <div style={{ marginTop: '1.5rem', padding: '1rem', background: '#fffbeb', borderRadius: 'var(--radius-md)', border: '1px solid #fef3c7', fontSize: '0.85rem' }}>
-          <p style={{ color: '#92400e' }}>
-            <strong>Tip para probar:</strong><br />
-            - Usa un email con la palabra <b>"dentista"</b> para entrar como tal.<br />
-            - Cualquier otro entrará como <b>cliente</b>.
-          </p>
         </div>
       </div>
     </div>
