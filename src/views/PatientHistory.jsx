@@ -2,21 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { Search, User, Clipboard, History } from 'lucide-react';
 import { useAppointments } from '../hooks/useAppointments';
 
-export const PatientHistory = () => {
-  const { appointments, loading } = useAppointments();
+export const PatientHistory = ({ user }) => {
+  const { appointments, loading } = useAppointments(user);
   const [searchTerm, setSearchTerm] = useState('');
+  const [profiles, setProfiles] = useState({});
   
+  useEffect(() => {
+    const fetchProfiles = async () => {
+      if (user?.email === 'dentista@reservapp.com') {
+        const { data } = await supabase.from('profiles').select('*');
+        if (data) {
+          const profileMap = data.reduce((acc, p) => ({ ...acc, [p.email]: p }), {});
+          setProfiles(profileMap);
+        }
+      }
+    };
+    fetchProfiles();
+  }, [user]);
+
   if (loading) return null;
   
-  // Agrupar citas por cliente para crear un "historial"
+  // Agrupar citas por email para ser más precisos con los perfiles
   const patients = appointments.reduce((acc, app) => {
-    if (!acc[app.client_name]) {
-      acc[app.client_name] = {
+    const email = app.client_email;
+    if (!acc[email]) {
+      acc[email] = {
         name: app.client_name,
+        email: email,
+        profile: profiles[email] || null,
         history: []
       };
     }
-    acc[app.client_name].history.push(app);
+    acc[email].history.push(app);
     return acc;
   }, {});
 
@@ -50,7 +67,14 @@ export const PatientHistory = () => {
                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
                   <User size={20} />
                 </div>
-                <h4 style={{ fontSize: '1.1rem' }}>{patient.name}</h4>
+                <div>
+                  <h4 style={{ fontSize: '1.1rem' }}>{patient.name}</h4>
+                  {patient.profile && (
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      Nacimiento: {patient.profile.birth_date}
+                    </p>
+                  )}
+                </div>
               </div>
               
               <div style={{ marginLeft: '3rem' }}>

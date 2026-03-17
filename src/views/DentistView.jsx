@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useAppointments } from '../hooks/useAppointments';
 import { Plus, Check, X, Clock } from 'lucide-react';
 
-export const DentistDashboard = () => {
-  const { appointments, updateStatus, loading } = useAppointments();
+export const DentistDashboard = ({ user }) => {
+  const { appointments, updateStatus, loading } = useAppointments(user);
 
   if (loading) return <div style={{ textAlign: 'center', padding: '3rem' }}>Cargando agenda...</div>;
 

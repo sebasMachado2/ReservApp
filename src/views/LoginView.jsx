@@ -1,17 +1,54 @@
 import React, { useState } from 'react';
 import { LogIn, UserPlus, Mail, Lock, ArrowRight } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 
-export const LoginView = ({ onLogin }) => {
+export const LoginView = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [birthDate, setBirthDate] = useState('');
+  const [error, setError] = useState(null);
+  const { login, signUp } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Aquí irá la lógica real de Supabase
-    // Por ahora simulamos el login basándonos en un email ficticio
-    const role = email.includes('dentista') ? 'dentist' : 'client';
-    onLogin({ email, role });
+    setError(null);
+    
+    try {
+      if (isLogin) {
+        const { error } = await login(email, password);
+        if (error) throw error;
+      } else {
+        // 1. Registro en Auth
+        const { data, error: signUpError } = await signUp(email, password, { 
+          full_name: fullName,
+          role: 'client' 
+        });
+        
+        if (signUpError) throw signUpError;
+
+        // 2. Insertar en tabla profiles si el usuario se creó
+        if (data?.user) {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert([{
+              id: data.user.id,
+              full_name: fullName,
+              birth_date: birthDate,
+              email: email
+            }]);
+          
+          if (profileError) throw profileError;
+        }
+
+        alert('¡Cuenta creada! Revisa tu correo (si aplica) o intenta entrar.');
+        setIsLogin(true);
+      }
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -47,6 +84,30 @@ export const LoginView = ({ onLogin }) => {
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1.25rem' }}>
+          {!isLogin && (
+            <>
+              <div style={{ position: 'relative' }}>
+                <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                <input 
+                  required
+                  placeholder="Nombre Completo"
+                  style={{ width: '100%', padding: '0.8rem 1rem 0.8rem 2.8rem', borderRadius: 'var(--radius-md)', border: '1px solid #ddd' }}
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+                <input 
+                  required
+                  type="date"
+                  placeholder="Fecha de Nacimiento"
+                  style={{ width: '100%', padding: '0.8rem', borderRadius: 'var(--radius-md)', border: '1px solid #ddd' }}
+                  value={birthDate}
+                  onChange={e => setBirthDate(e.target.value)}
+                />
+              </div>
+            </>
+          )}
           <div style={{ position: 'relative' }}>
             <Mail size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input 
@@ -75,6 +136,12 @@ export const LoginView = ({ onLogin }) => {
             {isLogin ? 'Entrar' : 'Registrarse'}
             <ArrowRight size={20} />
           </button>
+
+          {error && (
+            <div style={{ color: 'var(--error)', fontSize: '0.85rem', textAlign: 'center', marginTop: '0.5rem' }}>
+              {error}
+            </div>
+          )}
         </form>
 
         <div style={{ marginTop: '2rem', textAlign: 'center' }}>

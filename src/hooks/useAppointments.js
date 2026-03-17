@@ -1,17 +1,23 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
-export const useAppointments = () => {
+export const useAppointments = (user) => {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Cargar citas desde Supabase
   const fetchAppointments = async () => {
+    if (!user) return;
     setLoading(true);
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('*')
-      .order('created_at', { ascending: false });
+    
+    let query = supabase.from('appointments').select('*');
+    
+    // Si no es el dentista, filtrar solo sus citas
+    if (user.email !== 'dentista@reservapp.com') {
+      query = query.eq('client_email', user.email);
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false });
 
     if (!error) {
       setAppointments(data);
@@ -21,26 +27,39 @@ export const useAppointments = () => {
 
   useEffect(() => {
     fetchAppointments();
-  }, []);
+  }, [user]);
 
   const addAppointment = async (newApp) => {
-    // Verificar conflictos en Supabase
-    const { data: conflicts } = await supabase
+    // 1. Obtener citas del mismo día (no canceladas)
+    const { data: dayAppointments } = await supabase
       .from('appointments')
-      .select('id')
+      .select('time, duration_minutes')
       .eq('date', newApp.date)
-      .eq('time', newApp.time)
       .neq('status', 'cancelled');
 
-    if (conflicts && conflicts.length > 0) {
-      return { success: false, message: 'Horario ya ocupado' };
+    // 2. Lógica de traslape (Overlapping)
+    const startNew = new Date(`1970-01-01T${newApp.time}`).getTime();
+    const endNew = startNew + (newApp.duration_minutes * 60000);
+
+    const hasOverlap = dayAppointments?.some(app => {
+      const startExisting = new Date(`1970-01-01T${app.time}`).getTime();
+      const endExisting = startExisting + (app.duration_minutes * 60000);
+      
+      // Hay traslape si (Inicio1 < Fin2) Y (Inicio2 < Fin1)
+      return startNew < endExisting && startExisting < endNew;
+    });
+
+    if (hasOverlap) {
+      return { success: false, message: 'Este tratamiento choca con otra cita ya programada' };
     }
 
     const { error } = await supabase
       .from('appointments')
       .insert([{ 
         client_name: newApp.client_name,
+        client_email: user.email,
         treatment: newApp.treatment,
+        duration_minutes: newApp.duration_minutes,
         date: newApp.date,
         time: newApp.time,
         status: 'pending'
@@ -48,7 +67,7 @@ export const useAppointments = () => {
 
     if (error) return { success: false, message: error.message };
     
-    fetchAppointments(); // Recargar datos
+    fetchAppointments();
     return { success: true };
   };
 
